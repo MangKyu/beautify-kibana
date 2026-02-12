@@ -2,6 +2,8 @@
 
 A Chrome extension that automatically formats and syntax-highlights JSON fields on the Kibana Discover page.
 
+![](images/kibana_sample.png)
+
 ## Features
 
 - **JSON Pretty Print** — Automatically converts single-line JSON fields into indented, readable format
