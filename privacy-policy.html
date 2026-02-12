@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Kibana Beautify</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.7; color: #333; }
+    h1 { font-size: 1.6em; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+    h2 { font-size: 1.2em; margin-top: 28px; }
+    p { margin: 8px 0; }
+    .updated { color: #666; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy - Kibana Beautify</h1>
+  <p class="updated">Last updated: February 13, 2026</p>
+
+  <h2>Overview</h2>
+  <p>Kibana Beautify is a Chrome extension that automatically formats and beautifies JSON fields on Kibana Discover pages. We are committed to protecting your privacy.</p>
+
+  <h2>Data Collection</h2>
+  <p>Kibana Beautify does <strong>not</strong> collect, transmit, or share any personal data or browsing information. The extension operates entirely within your browser.</p>
+
+  <h2>Data Storage</h2>
+  <p>The extension stores the following settings locally using Chrome's built-in storage API (<code>chrome.storage.sync</code>):</p>
+  <ul>
+    <li>Extension enabled/disabled state</li>
+    <li>URL patterns configured by the user</li>
+    <li>Field names configured by the user</li>
+    <li>Truncated JSON repair option</li>
+  </ul>
+  <p>This data is stored only on your device and synced across your Chrome browsers via your Google account if Chrome Sync is enabled. It is never sent to any external server.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><strong>storage</strong>: Used to save your extension settings.</li>
+    <li><strong>activeTab</strong>: Used to detect the currently active tab for JSON beautification.</li>
+    <li><strong>Host permissions (all URLs)</strong>: Required because Kibana instances can be hosted on any domain. The extension only activates on pages matching your configured URL patterns.</li>
+  </ul>
+
+  <h2>Third-Party Services</h2>
+  <p>This extension does not use any third-party services, analytics, or tracking tools.</p>
+
+  <h2>Changes to This Policy</h2>
+  <p>If this privacy policy is updated, the changes will be reflected on this page with an updated date.</p>
+
+  <h2>Contact</h2>
+  <p>If you have any questions about this privacy policy, please open an issue on the <a href="https://github.com/mangkyu/kibana-beautify">GitHub repository</a>.</p>
+</body>
+</html>

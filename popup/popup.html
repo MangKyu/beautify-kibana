@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Kibana Beautify</h1>
+      <label class="toggle">
+        <input type="checkbox" id="enableToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <section>
+      <h2>URL Patterns</h2>
+      <p class="hint">Matches by substring contained in the URL</p>
+      <div class="input-row">
+        <input type="text" id="urlInput" placeholder="kibana.example.com/app/discover">
+        <button id="addUrlBtn">Add</button>
+      </div>
+      <ul id="urlList" class="item-list"></ul>
+    </section>
+
+    <section>
+      <h2>Field Names</h2>
+      <p class="hint">Enter the JSON field names to beautify</p>
+      <div class="input-row">
+        <input type="text" id="fieldInput" placeholder="status.paramsstring">
+        <button id="addFieldBtn">Add</button>
+      </div>
+      <ul id="fieldList" class="item-list"></ul>
+    </section>
+
+    <section class="option-row">
+      <div>
+        <h2>Repair Truncated JSON</h2>
+        <p class="hint">Automatically repairs and displays truncated JSON</p>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="repairToggle">
+        <span class="slider"></span>
+      </label>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
