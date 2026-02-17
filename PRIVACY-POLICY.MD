@@ -24,7 +24,6 @@ This data is stored only on your device and synced across your Chrome browsers v
 ## Permissions
 
 - **storage**: Used to save your extension settings.
-- **activeTab**: Used to detect the currently active tab for JSON beautification.
 - **Host permissions (all URLs)**: Required because Kibana instances can be hosted on any domain. The extension only activates on pages matching your configured URL patterns.
 
 ## Third-Party Services
