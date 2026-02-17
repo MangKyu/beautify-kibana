@@ -3,7 +3,7 @@
   "name": "Kibana Beautify",
   "version": "1.0.0",
   "description": "Automatically beautify JSON fields in Kibana Discover page",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage"],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
