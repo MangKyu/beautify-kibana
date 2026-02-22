@@ -38,33 +38,153 @@
     );
   }
 
-  function syntaxHighlight(json) {
-    const str = JSON.stringify(json, null, 2);
-    return str.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
-      (match) => {
-        let cls = 'json-number';
-        if (/^"/.test(match)) {
-          if (/:$/.test(match)) {
-            cls = 'json-key';
-          } else {
-            cls = 'json-string';
-          }
-        } else if (/true|false/.test(match)) {
-          cls = 'json-boolean';
-        } else if (/null/.test(match)) {
-          cls = 'json-null';
-        }
-        return '<span class="' + cls + '">' + escapeHtml(match) + '</span>';
-      }
-    );
+  // --- JSON Tree Rendering (Collapsible) ---
+
+  function createValueSpan(value) {
+    const span = document.createElement('span');
+    if (value === null) {
+      span.className = 'json-null';
+      span.textContent = 'null';
+    } else if (typeof value === 'string') {
+      span.className = 'json-string';
+      span.textContent = '"' + value + '"';
+    } else if (typeof value === 'number') {
+      span.className = 'json-number';
+      span.textContent = String(value);
+    } else if (typeof value === 'boolean') {
+      span.className = 'json-boolean';
+      span.textContent = String(value);
+    }
+    return span;
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(text));
-    return div.innerHTML;
+  function appendKeySpan(parent, key) {
+    const keySpan = document.createElement('span');
+    keySpan.className = 'json-key';
+    keySpan.textContent = '"' + key + '"';
+    parent.appendChild(keySpan);
+    parent.appendChild(document.createTextNode(': '));
   }
+
+  function renderJsonTree(value, depth) {
+    const root = document.createElement('div');
+    root.className = 'json-tree-root';
+    buildNode(root, null, value, depth, false);
+    return root;
+  }
+
+  function buildNode(container, key, value, depth, addComma) {
+    const commaStr = addComma ? ',' : '';
+
+    // Primitive values (including null)
+    if (value === null || typeof value !== 'object') {
+      const line = document.createElement('div');
+      line.className = 'json-line';
+      if (key !== null) appendKeySpan(line, key);
+      line.appendChild(createValueSpan(value));
+      if (commaStr) line.appendChild(document.createTextNode(commaStr));
+      container.appendChild(line);
+      return;
+    }
+
+    const isArray = Array.isArray(value);
+    const entries = isArray
+      ? value.map(function (v, i) { return [i, v]; })
+      : Object.entries(value);
+    const count = entries.length;
+    const openChar = isArray ? '[' : '{';
+    const closeChar = isArray ? ']' : '}';
+    const braceClass = isArray ? 'json-bracket' : 'json-brace';
+
+    // Empty object/array
+    if (count === 0) {
+      const line = document.createElement('div');
+      line.className = 'json-line';
+      if (key !== null) appendKeySpan(line, key);
+      const span = document.createElement('span');
+      span.className = braceClass;
+      span.textContent = openChar + closeChar + commaStr;
+      line.appendChild(span);
+      container.appendChild(line);
+      return;
+    }
+
+    const expanded = depth < 2;
+    const entry = document.createElement('div');
+    entry.className = 'json-entry';
+
+    // Opening line: [key: ] toggle open_brace [placeholder close_brace]
+    const openLine = document.createElement('div');
+    openLine.className = 'json-line';
+    if (key !== null) appendKeySpan(openLine, key);
+
+    const toggle = document.createElement('span');
+    toggle.className = 'json-toggle';
+    toggle.textContent = expanded ? '▼ ' : '▶ ';
+    openLine.appendChild(toggle);
+
+    const openBrace = document.createElement('span');
+    openBrace.className = braceClass;
+    openBrace.textContent = openChar;
+    openLine.appendChild(openBrace);
+
+    // Collapsed placeholder: shown when collapsed
+    const placeholder = document.createElement('span');
+    placeholder.className = 'json-collapsed-placeholder';
+    placeholder.textContent = isArray
+      ? '...' + count + ' items'
+      : '...' + count + ' keys';
+    placeholder.style.display = expanded ? 'none' : 'inline';
+    openLine.appendChild(placeholder);
+
+    // Collapsed close brace: shown when collapsed (inline)
+    const closedBrace = document.createElement('span');
+    closedBrace.className = braceClass;
+    closedBrace.textContent = closeChar + commaStr;
+    closedBrace.style.display = expanded ? 'none' : 'inline';
+    openLine.appendChild(closedBrace);
+
+    entry.appendChild(openLine);
+
+    // Children content
+    const content = document.createElement('div');
+    content.className = 'json-collapsible-content';
+    content.style.paddingLeft = '16px';
+    content.style.display = expanded ? 'block' : 'none';
+
+    entries.forEach(function (pair, i) {
+      var k = pair[0];
+      var v = pair[1];
+      buildNode(content, isArray ? null : k, v, depth + 1, i < count - 1);
+    });
+
+    entry.appendChild(content);
+
+    // Closing line: shown when expanded
+    const closeLine = document.createElement('div');
+    closeLine.className = 'json-line';
+    const closeSpan = document.createElement('span');
+    closeSpan.className = braceClass;
+    closeSpan.textContent = closeChar + commaStr;
+    closeLine.appendChild(closeSpan);
+    closeLine.style.display = expanded ? 'block' : 'none';
+    entry.appendChild(closeLine);
+
+    // Toggle click handler
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isExp = content.style.display !== 'none';
+      content.style.display = isExp ? 'none' : 'block';
+      closeLine.style.display = isExp ? 'none' : 'block';
+      placeholder.style.display = isExp ? 'inline' : 'none';
+      closedBrace.style.display = isExp ? 'inline' : 'none';
+      toggle.textContent = isExp ? '▶ ' : '▼ ';
+    });
+
+    container.appendChild(entry);
+  }
+
+  // --- JSON Parsing ---
 
   function tryParseJson(text) {
     const trimmed = text.trim();
@@ -85,11 +205,24 @@
     if (!text.startsWith('{') && !text.startsWith('[')) return null;
 
     // Strip trailing ellipsis markers added by Kibana truncation
-    const cleaned = text.replace(/\.{2,}$|\u2026$/g, '');
+    let cleaned = text.replace(/\.{2,}$|\u2026$/g, '');
 
-    let lastValidIndex = -1;
+    // If truncated mid-string, close the dangling quote
     let inString = false;
     let escape = false;
+    for (let i = 0; i < cleaned.length; i++) {
+      const c = cleaned[i];
+      if (escape) { escape = false; continue; }
+      if (c === '\\') { escape = true; continue; }
+      if (c === '"') inString = !inString;
+    }
+    if (inString) {
+      cleaned += '"';
+    }
+
+    let lastValidIndex = -1;
+    inString = false;
+    escape = false;
     let depth = 0;
 
     for (let i = 0; i < cleaned.length; i++) {
@@ -116,6 +249,9 @@
       trimmed = cleaned;
     }
 
+    // Strip trailing incomplete key-value pairs (e.g. "key":)
+    trimmed = trimmed.replace(/,?\s*"[^"]*"\s*:\s*$/, '');
+
     // Track nesting order to close brackets in correct reverse order
     const stack = [];
     inString = false;
@@ -140,6 +276,40 @@
     }
   }
 
+  // --- UI Components ---
+
+  function showCopyToast(message) {
+    let toast = document.getElementById('kibana-beautified-copy-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'kibana-beautified-copy-toast';
+      toast.className = 'kibana-beautified-copy-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message || 'JSON copied!';
+    toast.classList.remove('show');
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    setTimeout(function () { toast.classList.remove('show'); }, 1500);
+  }
+
+  function createCopyButton(json) {
+    const jsonStr = JSON.stringify(json, null, 2);
+    const btn = document.createElement('button');
+    btn.className = 'kibana-beautified-copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      navigator.clipboard.writeText(jsonStr).then(function () {
+        showCopyToast('JSON copied!');
+      });
+    });
+    return btn;
+  }
+
+
+  // --- Beautify Logic ---
+
   function beautifyElement(element) {
     if (element.getAttribute('data-kibana-beautified')) return;
 
@@ -156,30 +326,41 @@
 
     if (!parsed) return;
 
+    // Skip empty objects/arrays — nothing useful to beautify
+    if (typeof parsed === 'object' && Object.keys(parsed).length === 0) return;
+
     element.setAttribute('data-kibana-beautified', 'true');
 
     const pre = document.createElement('pre');
     pre.className = 'kibana-beautified-json';
-    pre.innerHTML = syntaxHighlight(parsed);
+
+    const treeEl = renderJsonTree(parsed, 0);
+    pre.appendChild(treeEl);
+
+    // Wrap with hover container + buttons
+    const wrap = document.createElement('div');
+    wrap.className = 'kibana-beautified-json-wrap';
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'kibana-beautified-btn-group';
+    btnGroup.appendChild(createCopyButton(parsed));
+    wrap.appendChild(btnGroup);
 
     element.textContent = '';
 
     if (repaired) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'kibana-beautified-wrapper';
-
       const badge = document.createElement('span');
       badge.className = 'kibana-beautified-repaired-badge';
-      badge.textContent = 'Truncated JSON — Repaired';
-      wrapper.appendChild(badge);
-
+      badge.textContent = 'Truncated JSON \u2014 Repaired';
+      wrap.appendChild(badge);
       pre.classList.add('kibana-beautified-repaired');
-      wrapper.appendChild(pre);
-      element.appendChild(wrapper);
-    } else {
-      element.appendChild(pre);
     }
+
+    wrap.appendChild(pre);
+    element.appendChild(wrap);
   }
+
+  // --- Cell / Field Scanning ---
 
   // Build a set of column IDs that match configured field names
   function getMatchingColumnIds() {
@@ -189,7 +370,7 @@
     const headers = document.querySelectorAll(
       '[data-gridcell-column-id], [role="columnheader"]'
     );
-    headers.forEach((header) => {
+    headers.forEach(function (header) {
       const columnId = header.getAttribute('data-gridcell-column-id') || '';
       const headerText = header.textContent.trim();
 
@@ -208,7 +389,7 @@
     });
 
     // Strategy 2: Add exact field names (in case headers haven't loaded yet)
-    config.fieldNames.forEach((name) => matchingIds.add(name));
+    config.fieldNames.forEach(function (name) { matchingIds.add(name); });
 
     return matchingIds;
   }
@@ -221,6 +402,7 @@
       '.euiDataGridRowCell__truncate',
       '.dscDiscoverGrid__cellValue',
       '.kbnDocViewer__value',
+      '.truncate-by-height',
       '[class*="cellValue"]',
       '[class*="cellContent"]',
     ];
@@ -257,14 +439,35 @@
     if (!config.enabled || !matchesUrl()) return;
     if (config.fieldNames.length === 0) return;
 
+    // Feature 2: "all" keyword → auto-detect all JSON cells
+    var autoDetectAll = config.fieldNames.some(function (name) {
+      return name.toLowerCase() === 'all';
+    });
+
+    if (autoDetectAll) {
+      // Scan all grid cells
+      document.querySelectorAll('[role="gridcell"]').forEach(function (cell) {
+        beautifyCellContent(cell);
+      });
+      // Scan all HTML table cells
+      document.querySelectorAll('table td').forEach(function (cell) {
+        beautifyCellContent(cell);
+      });
+      // Scan document viewer values
+      document.querySelectorAll('.kbnDocViewer__value').forEach(function (el) {
+        beautifyElement(el);
+      });
+      return;
+    }
+
     const matchingColumnIds = getMatchingColumnIds();
 
     // Strategy 1: Find cells by data-gridcell-column-id (EuiDataGrid / UnifiedDataTable)
-    matchingColumnIds.forEach((columnId) => {
+    matchingColumnIds.forEach(function (columnId) {
       const cells = document.querySelectorAll(
         '[data-gridcell-column-id="' + CSS.escape(columnId) + '"]'
       );
-      cells.forEach((cell) => {
+      cells.forEach(function (cell) {
         // Skip header cells
         if (cell.getAttribute('role') === 'columnheader') return;
         beautifyCellContent(cell);
@@ -276,7 +479,7 @@
       const docViewerCells = document.querySelectorAll(
         '[data-test-subj*="tableDocViewRow-' + fieldName + '"]'
       );
-      docViewerCells.forEach((row) => {
+      docViewerCells.forEach(function (row) {
         const valueEl = row.querySelector(
           '.kbnDocViewer__value, [class*="value"]'
         );
@@ -307,7 +510,7 @@
     );
     const targetIndices = new Set();
 
-    headerCells.forEach((header, index) => {
+    headerCells.forEach(function (header, index) {
       const text = header.textContent.trim();
       for (const fieldName of config.fieldNames) {
         if (text === fieldName || text.includes(fieldName)) {
@@ -322,11 +525,11 @@
     const dataRows = document.querySelectorAll(
       '[role="row"]:not(:has([role="columnheader"])), .euiDataGridRow'
     );
-    dataRows.forEach((row) => {
+    dataRows.forEach(function (row) {
       const cells = row.querySelectorAll(
         '[role="gridcell"], .euiDataGridRowCell'
       );
-      targetIndices.forEach((idx) => {
+      targetIndices.forEach(function (idx) {
         if (cells[idx]) {
           beautifyCellContent(cells[idx]);
         }
@@ -336,14 +539,14 @@
 
   function scanHtmlTables() {
     const tables = document.querySelectorAll('table');
-    tables.forEach((table) => {
+    tables.forEach(function (table) {
       const headerRow = table.querySelector('thead tr, tr:first-child');
       if (!headerRow) return;
 
       const headers = headerRow.querySelectorAll('th, td');
       const targetIndices = new Set();
 
-      headers.forEach((header, index) => {
+      headers.forEach(function (header, index) {
         const text = header.textContent.trim();
         for (const fieldName of config.fieldNames) {
           if (text === fieldName || text.includes(fieldName)) {
@@ -358,19 +561,19 @@
       if (dataRows.length === 0) {
         // No tbody — skip the header row
         const allRows = table.querySelectorAll('tr');
-        allRows.forEach((row, rowIdx) => {
+        allRows.forEach(function (row, rowIdx) {
           if (rowIdx === 0) return;
           const cells = row.querySelectorAll('td');
-          targetIndices.forEach((idx) => {
+          targetIndices.forEach(function (idx) {
             if (cells[idx]) {
               beautifyCellContent(cells[idx]);
             }
           });
         });
       } else {
-        dataRows.forEach((row) => {
+        dataRows.forEach(function (row) {
           const cells = row.querySelectorAll('td');
-          targetIndices.forEach((idx) => {
+          targetIndices.forEach(function (idx) {
             if (cells[idx]) {
               beautifyCellContent(cells[idx]);
             }
@@ -380,18 +583,20 @@
     });
   }
 
+  // --- Initialization ---
+
   function debouncedFindAndBeautify() {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(findAndBeautify, 100);
   }
 
   function init() {
-    loadConfig().then(() => {
+    loadConfig().then(function () {
       if (!config.enabled || !matchesUrl()) return;
 
       findAndBeautify();
 
-      const observer = new MutationObserver(() => {
+      const observer = new MutationObserver(function () {
         debouncedFindAndBeautify();
       });
 
@@ -401,7 +606,7 @@
       });
     });
 
-    chrome.storage.onChanged.addListener((changes) => {
+    chrome.storage.onChanged.addListener(function (changes) {
       if (changes.enabled) config.enabled = changes.enabled.newValue;
       if (changes.urlPatterns)
         config.urlPatterns = changes.urlPatterns.newValue;
@@ -410,7 +615,7 @@
         config.repairTruncatedJson = changes.repairTruncatedJson.newValue;
 
       // Re-process: remove existing beautification and re-apply
-      document.querySelectorAll('[data-kibana-beautified]').forEach((el) => {
+      document.querySelectorAll('[data-kibana-beautified]').forEach(function (el) {
         el.removeAttribute('data-kibana-beautified');
       });
       findAndBeautify();

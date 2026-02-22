@@ -1,10 +1,33 @@
+/* Table width fix for Kibana Discover classic table */
+table.kbn-table {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+table.kbn-table thead th:nth-child(1) {
+  width: 24px !important;
+}
+
+table.kbn-table thead th:nth-child(2) {
+  width: 180px !important;
+}
+
+table.kbn-table td {
+  overflow: hidden !important;
+  max-width: 0 !important;
+  vertical-align: top !important;
+}
+
 .kibana-beautified-json {
   font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
   font-size: 12px;
   line-height: 1.5;
   white-space: pre;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 400px;
   padding: 4px 0;
+  position: relative;
 }
 
 .kibana-beautified-json .json-key {
@@ -29,11 +52,113 @@
   color: #6b7280;
 }
 
-/* Repaired JSON indicator */
-.kibana-beautified-wrapper {
+/* Hover highlight and button group */
+.kibana-beautified-json-wrap {
   position: relative;
+  max-width: 100%;
+  overflow: hidden;
 }
 
+.kibana-beautified-json-wrap:hover {
+  outline: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.kibana-beautified-btn-group {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  visibility: hidden;
+}
+
+.kibana-beautified-json-wrap:hover .kibana-beautified-btn-group {
+  visibility: visible;
+}
+
+.kibana-beautified-copy-btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.kibana-beautified-copy-btn:hover {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.kibana-beautified-copy-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* Collapsible JSON tree */
+.json-tree-root {
+  display: inline;
+}
+
+.json-entry {
+  display: block;
+}
+
+.json-line {
+  display: block;
+  white-space: pre;
+}
+
+.json-toggle {
+  cursor: pointer;
+  user-select: none;
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.json-toggle:hover {
+  color: #6b7280;
+}
+
+.json-collapsed-placeholder {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 11px;
+  margin: 0 2px;
+}
+
+.kibana-beautified-copy-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10000;
+  background: #065f46;
+  color: #ecfdf5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+
+.kibana-beautified-copy-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Repaired JSON indicator */
 .kibana-beautified-repaired-badge {
   display: inline-block;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -53,6 +178,20 @@
 }
 
 /* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .json-toggle {
+    color: #6b7280;
+  }
+
+  .json-toggle:hover {
+    color: #9ca3af;
+  }
+
+  .json-collapsed-placeholder {
+    color: #6b7280;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .kibana-beautified-json .json-key {
     color: #a78bfa;
@@ -74,6 +213,22 @@
   .kibana-beautified-json .json-brace,
   .kibana-beautified-json .json-bracket {
     color: #9ca3af;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .kibana-beautified-copy-btn {
+    color: #9ca3af;
+    background: rgba(30, 30, 30, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .kibana-beautified-copy-btn:hover {
+    color: #e5e7eb;
+    background: rgba(40, 40, 40, 0.95);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -120,4 +275,35 @@
   color: #fbbf24;
   background: #451a0333;
   border-color: #92400e;
+}
+
+.euiTheme-dark .kibana-beautified-copy-btn,
+[data-theme="dark"] .kibana-beautified-copy-btn {
+  color: #9ca3af;
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.euiTheme-dark .kibana-beautified-copy-btn:hover,
+[data-theme="dark"] .kibana-beautified-copy-btn:hover {
+  color: #e5e7eb;
+  background: rgba(40, 40, 40, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.euiTheme-dark .json-toggle,
+[data-theme="dark"] .json-toggle {
+  color: #6b7280;
+}
+
+.euiTheme-dark .json-toggle:hover,
+[data-theme="dark"] .json-toggle:hover {
+  color: #9ca3af;
+}
+
+.euiTheme-dark .json-collapsed-placeholder,
+[data-theme="dark"] .json-collapsed-placeholder {
+  color: #6b7280;
 }
