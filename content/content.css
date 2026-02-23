@@ -67,39 +67,38 @@ table.kbn-table td {
 .kibana-beautified-btn-group {
   display: flex;
   gap: 4px;
-  justify-content: flex-end;
-  visibility: hidden;
-}
-
-.kibana-beautified-json-wrap:hover .kibana-beautified-btn-group {
-  visibility: visible;
+  justify-content: flex-start;
 }
 
 .kibana-beautified-copy-btn {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: #6b7280;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 6px;
-  padding: 3px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .kibana-beautified-copy-btn:hover {
-  color: #374151;
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(0, 0, 0, 0.12);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  color: #6b7280;
+  background: #e5e7eb;
+  border-color: #d1d5db;
 }
 
 .kibana-beautified-copy-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transform: scale(0.9);
+}
+
+.kibana-beautified-copy-btn.copied {
+  color: #fff;
+  background: #16a34a;
+  border-color: #16a34a;
 }
 
 /* Collapsible JSON tree */
@@ -218,17 +217,21 @@ table.kbn-table td {
 
 @media (prefers-color-scheme: dark) {
   .kibana-beautified-copy-btn {
-    color: #9ca3af;
-    background: rgba(30, 30, 30, 0.85);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    color: #6b7280;
+    background: #374151;
+    border-color: #4b5563;
   }
 
   .kibana-beautified-copy-btn:hover {
-    color: #e5e7eb;
-    background: rgba(40, 40, 40, 0.95);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    color: #9ca3af;
+    background: #4b5563;
+    border-color: #6b7280;
+  }
+
+  .kibana-beautified-copy-btn.copied {
+    color: #fff;
+    background: #16a34a;
+    border-color: #16a34a;
   }
 }
 
@@ -279,18 +282,23 @@ table.kbn-table td {
 
 .euiTheme-dark .kibana-beautified-copy-btn,
 [data-theme="dark"] .kibana-beautified-copy-btn {
-  color: #9ca3af;
-  background: rgba(30, 30, 30, 0.85);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: #6b7280;
+  background: #374151;
+  border-color: #4b5563;
 }
 
 .euiTheme-dark .kibana-beautified-copy-btn:hover,
 [data-theme="dark"] .kibana-beautified-copy-btn:hover {
-  color: #e5e7eb;
-  background: rgba(40, 40, 40, 0.95);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #9ca3af;
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.euiTheme-dark .kibana-beautified-copy-btn.copied,
+[data-theme="dark"] .kibana-beautified-copy-btn.copied {
+  color: #fff;
+  background: #16a34a;
+  border-color: #16a34a;
 }
 
 .euiTheme-dark .json-toggle,
