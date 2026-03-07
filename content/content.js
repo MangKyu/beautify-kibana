@@ -367,6 +367,16 @@
 
     wrap.appendChild(pre);
     element.appendChild(wrap);
+
+    // Constrain wrap to td width so horizontal scroll works within the cell
+    var td = element.tagName === 'TD' ? element : element.closest('td');
+    if (td) {
+      var tdWidth = td.clientWidth;
+      if (tdWidth > 0) {
+        wrap.style.width = tdWidth + 'px';
+        wrap.style.maxWidth = tdWidth + 'px';
+      }
+    }
   }
 
   // --- Cell / Field Scanning ---

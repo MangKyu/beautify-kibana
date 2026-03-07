@@ -18,6 +18,10 @@ table.kbn-table td {
   vertical-align: top !important;
 }
 
+table.kbn-table td[data-kibana-beautified] {
+  overflow: hidden !important;
+}
+
 .kibana-beautified-json {
   font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
   font-size: 12px;
@@ -26,6 +30,8 @@ table.kbn-table td {
   overflow-x: auto;
   overflow-y: auto;
   max-height: 400px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 4px 0;
   position: relative;
 }
@@ -55,8 +61,10 @@ table.kbn-table td {
 /* Hover highlight and button group */
 .kibana-beautified-json-wrap {
   position: relative;
-  max-width: 100%;
-  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .kibana-beautified-json-wrap:hover {
@@ -103,7 +111,8 @@ table.kbn-table td {
 
 /* Collapsible JSON tree */
 .json-tree-root {
-  display: inline;
+  display: inline-block;
+  min-width: 100%;
 }
 
 .json-entry {
