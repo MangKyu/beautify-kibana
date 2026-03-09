@@ -13,11 +13,11 @@
   function loadConfig() {
     return new Promise((resolve) => {
       chrome.storage.sync.get(
-        { enabled: true, urlPatterns: [], fieldNames: [], repairTruncatedJson: false },
-        (result) => {
-          config = result;
-          resolve(config);
-        }
+          { enabled: true, urlPatterns: [], fieldNames: [], repairTruncatedJson: false },
+          (result) => {
+            config = result;
+            resolve(config);
+          }
       );
     });
   }
@@ -34,7 +34,7 @@
       return true;
     }
     return urls.some((url) =>
-      config.urlPatterns.some((pattern) => url.includes(pattern))
+        config.urlPatterns.some((pattern) => url.includes(pattern))
     );
   }
 
@@ -66,14 +66,15 @@
     parent.appendChild(document.createTextNode(': '));
   }
 
-  function renderJsonTree(value, depth) {
+  function renderJsonTree(value, depth, maxExpandDepth) {
+    var expandLimit = (typeof maxExpandDepth === 'number') ? maxExpandDepth : 2;
     const root = document.createElement('div');
     root.className = 'json-tree-root';
-    buildNode(root, null, value, depth, false);
+    buildNode(root, null, value, depth, false, expandLimit);
     return root;
   }
 
-  function buildNode(container, key, value, depth, addComma) {
+  function buildNode(container, key, value, depth, addComma, expandLimit) {
     const commaStr = addComma ? ',' : '';
 
     // Primitive values (including null)
@@ -89,8 +90,8 @@
 
     const isArray = Array.isArray(value);
     const entries = isArray
-      ? value.map(function (v, i) { return [i, v]; })
-      : Object.entries(value);
+        ? value.map(function (v, i) { return [i, v]; })
+        : Object.entries(value);
     const count = entries.length;
     const openChar = isArray ? '[' : '{';
     const closeChar = isArray ? ']' : '}';
@@ -109,7 +110,7 @@
       return;
     }
 
-    const expanded = depth < 2;
+    const expanded = depth < expandLimit;
     const entry = document.createElement('div');
     entry.className = 'json-entry';
 
@@ -132,8 +133,8 @@
     const placeholder = document.createElement('span');
     placeholder.className = 'json-collapsed-placeholder';
     placeholder.textContent = isArray
-      ? '...' + count + ' items'
-      : '...' + count + ' keys';
+        ? '...' + count + ' items'
+        : '...' + count + ' keys';
     placeholder.style.display = expanded ? 'none' : 'inline';
     openLine.appendChild(placeholder);
 
@@ -155,7 +156,7 @@
     entries.forEach(function (pair, i) {
       var k = pair[0];
       var v = pair[1];
-      buildNode(content, isArray ? null : k, v, depth + 1, i < count - 1);
+      buildNode(content, isArray ? null : k, v, depth + 1, i < count - 1, expandLimit);
     });
 
     entry.appendChild(content);
@@ -189,8 +190,8 @@
   function tryParseJson(text) {
     const trimmed = text.trim();
     if (
-      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+        (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+        (trimmed.startsWith('[') && trimmed.endsWith(']'))
     ) {
       try {
         return JSON.parse(trimmed);
@@ -276,53 +277,46 @@
     }
   }
 
-  // --- UI Components ---
+  // --- Kibana Version Detection ---
 
-  function showCopyToast(message) {
-    let toast = document.getElementById('kibana-beautified-copy-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'kibana-beautified-copy-toast';
-      toast.className = 'kibana-beautified-copy-toast';
-      document.body.appendChild(toast);
+  function getKibanaVersion() {
+    const meta = document.querySelector('meta[name="kbn-version"]');
+    return meta ? meta.getAttribute('content') : null;
+  }
+
+  function getKibanaMajorVersion() {
+    const version = getKibanaVersion();
+    if (!version) return null;
+    const major = parseInt(version.split('.')[0], 10);
+    return isNaN(major) ? null : major;
+  }
+
+  // Extract JSON text from element, stripping Kibana UI controls (copy buttons, etc.)
+  function getJsonText(element) {
+    const controls = element.querySelectorAll(
+        'button, [role="button"], .euiButtonIcon, .euiCopy, .euiToolTipAnchor'
+    );
+    if (controls.length > 0) {
+      const clone = element.cloneNode(true);
+      clone.querySelectorAll(
+          'button, [role="button"], .euiButtonIcon, .euiCopy, .euiToolTipAnchor'
+      ).forEach(function (el) { el.remove(); });
+      return clone.textContent;
     }
-    toast.textContent = message || 'JSON copied!';
-    toast.classList.remove('show');
-    void toast.offsetWidth;
-    toast.classList.add('show');
-    setTimeout(function () { toast.classList.remove('show'); }, 1500);
+    return element.textContent;
   }
-
-  var COPY_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-  var CHECK_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-
-  function createCopyButton(json) {
-    const jsonStr = JSON.stringify(json, null, 2);
-    const btn = document.createElement('button');
-    btn.className = 'kibana-beautified-copy-btn';
-    btn.innerHTML = COPY_ICON;
-    btn.title = 'Copy JSON';
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      navigator.clipboard.writeText(jsonStr).then(function () {
-        btn.innerHTML = CHECK_ICON;
-        btn.classList.add('copied');
-        setTimeout(function () {
-          btn.innerHTML = COPY_ICON;
-          btn.classList.remove('copied');
-        }, 1500);
-      });
-    });
-    return btn;
-  }
-
 
   // --- Beautify Logic ---
 
   function beautifyElement(element) {
     if (element.getAttribute('data-kibana-beautified')) return;
 
-    const text = element.textContent;
+    // Skip if Kibana already rendered its own JSON viewer on this element
+    var kibanaJsonViewer = element.closest('.euiCodeBlock, .monaco-editor, [data-test-subj="jsonCodeEditor"]');
+    if (kibanaJsonViewer) return;
+    if (element.querySelector('.euiCodeBlock, .monaco-editor, .euiTreeView')) return;
+
+    const text = getJsonText(element);
     if (!text) return;
 
     let parsed = tryParseJson(text);
@@ -343,17 +337,14 @@
     const pre = document.createElement('pre');
     pre.className = 'kibana-beautified-json';
 
-    const treeEl = renderJsonTree(parsed, 0);
+    // Use shallow expansion (depth 1) in grid cells, deeper (depth 2) in flyout/doc viewer
+    var isGridCell = !!element.closest('[role="gridcell"]');
+    var maxExpand = isGridCell ? 1 : 2;
+    const treeEl = renderJsonTree(parsed, 0, maxExpand);
     pre.appendChild(treeEl);
 
-    // Wrap with hover container + buttons
     const wrap = document.createElement('div');
     wrap.className = 'kibana-beautified-json-wrap';
-
-    const btnGroup = document.createElement('div');
-    btnGroup.className = 'kibana-beautified-btn-group';
-    btnGroup.appendChild(createCopyButton(parsed));
-    wrap.appendChild(btnGroup);
 
     element.textContent = '';
 
@@ -368,13 +359,22 @@
     wrap.appendChild(pre);
     element.appendChild(wrap);
 
-    // Constrain wrap to td width so horizontal scroll works within the cell
-    var td = element.tagName === 'TD' ? element : element.closest('td');
-    if (td) {
-      var tdWidth = td.clientWidth;
-      if (tdWidth > 0) {
-        wrap.style.width = tdWidth + 'px';
-        wrap.style.maxWidth = tdWidth + 'px';
+    // Make cell content scrollable instead of clipped by line-clamp
+    var contentDiv = element.closest('.euiDataGridRowCell__content');
+    if (contentDiv) {
+      contentDiv.style.webkitLineClamp = 'unset';
+      contentDiv.style.display = 'block';
+      contentDiv.style.overflowY = 'auto';
+      contentDiv.style.overflowX = 'hidden';
+    }
+
+    // Constrain wrap to cell width so horizontal scroll works within the cell
+    var cell = element.closest('[role="gridcell"], td');
+    if (cell) {
+      var cellWidth = cell.clientWidth;
+      if (cellWidth > 0) {
+        wrap.style.width = cellWidth + 'px';
+        wrap.style.maxWidth = cellWidth + 'px';
       }
     }
   }
@@ -387,7 +387,7 @@
 
     // Strategy 1: Check header cells for matching field names
     const headers = document.querySelectorAll(
-      '[data-gridcell-column-id], [role="columnheader"]'
+        '[data-gridcell-column-id], [role="columnheader"]'
     );
     headers.forEach(function (header) {
       const columnId = header.getAttribute('data-gridcell-column-id') || '';
@@ -395,10 +395,10 @@
 
       for (const fieldName of config.fieldNames) {
         if (
-          columnId === fieldName ||
-          columnId.endsWith(fieldName) ||
-          headerText === fieldName ||
-          headerText.includes(fieldName)
+            columnId === fieldName ||
+            columnId.endsWith(fieldName) ||
+            headerText === fieldName ||
+            headerText.includes(fieldName)
         ) {
           if (columnId) {
             matchingIds.add(columnId);
@@ -416,8 +416,12 @@
   function beautifyCellContent(cell) {
     // Try various content wrapper selectors used across Kibana versions
     const contentSelectors = [
-      '.euiDataGridRowCell__content',
+      // Newer Kibana (8.15+, 9.x)
       '.unifiedDataTable__cellValue',
+      '.euiDataGridRowCell__content',
+      '.euiDataGridRowCell__expandContent',
+      '.kbnDocTableCell__dataField',
+      // Older Kibana
       '.euiDataGridRowCell__truncate',
       '.dscDiscoverGrid__cellValue',
       '.kbnDocViewer__value',
@@ -484,7 +488,7 @@
     // Strategy 1: Find cells by data-gridcell-column-id (EuiDataGrid / UnifiedDataTable)
     matchingColumnIds.forEach(function (columnId) {
       const cells = document.querySelectorAll(
-        '[data-gridcell-column-id="' + CSS.escape(columnId) + '"]'
+          '[data-gridcell-column-id="' + CSS.escape(columnId) + '"]'
       );
       cells.forEach(function (cell) {
         // Skip header cells
@@ -496,11 +500,11 @@
     // Strategy 2: Document Viewer / Flyout panel
     for (const fieldName of config.fieldNames) {
       const docViewerCells = document.querySelectorAll(
-        '[data-test-subj*="tableDocViewRow-' + fieldName + '"]'
+          '[data-test-subj*="tableDocViewRow-' + fieldName + '"]'
       );
       docViewerCells.forEach(function (row) {
         const valueEl = row.querySelector(
-          '.kbnDocViewer__value, [class*="value"]'
+            '.kbnDocViewer__value, [class*="value"]'
         );
         if (valueEl) {
           beautifyElement(valueEl);
@@ -520,12 +524,12 @@
   function scanGridByColumnPosition() {
     // Find column indices that match field names from header row
     const headerRow = document.querySelector(
-      '[role="row"]:has([role="columnheader"]), .euiDataGridHeader'
+        '[role="row"]:has([role="columnheader"]), .euiDataGridHeader'
     );
     if (!headerRow) return;
 
     const headerCells = headerRow.querySelectorAll(
-      '[role="columnheader"], .euiDataGridHeaderCell'
+        '[role="columnheader"], .euiDataGridHeaderCell'
     );
     const targetIndices = new Set();
 
@@ -542,11 +546,11 @@
 
     // Find all data rows and beautify cells at matching indices
     const dataRows = document.querySelectorAll(
-      '[role="row"]:not(:has([role="columnheader"])), .euiDataGridRow'
+        '[role="row"]:not(:has([role="columnheader"])), .euiDataGridRow'
     );
     dataRows.forEach(function (row) {
       const cells = row.querySelectorAll(
-        '[role="gridcell"], .euiDataGridRowCell'
+          '[role="gridcell"], .euiDataGridRowCell'
       );
       targetIndices.forEach(function (idx) {
         if (cells[idx]) {
