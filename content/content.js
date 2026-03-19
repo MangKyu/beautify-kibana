@@ -150,7 +150,7 @@
     // Children content
     const content = document.createElement('div');
     content.className = 'json-collapsible-content';
-    content.style.paddingLeft = '16px';
+    content.style.paddingLeft = '12px';
     content.style.display = expanded ? 'block' : 'none';
 
     entries.forEach(function (pair, i) {
@@ -334,8 +334,11 @@
 
     element.setAttribute('data-kibana-beautified', 'true');
 
-    const pre = document.createElement('pre');
+    const pre = document.createElement('div');
     pre.className = 'kibana-beautified-json';
+    pre.style.whiteSpace = 'pre-wrap';
+    pre.style.overflowWrap = 'break-word';
+    pre.style.wordBreak = 'normal';
 
     // Use shallow expansion (depth 1) in grid cells, deeper (depth 2) in flyout/doc viewer
     var isGridCell = !!element.closest('[role="gridcell"]');
@@ -359,6 +362,13 @@
     wrap.appendChild(pre);
     element.appendChild(wrap);
 
+    // Override truncation on parent wrappers
+    var truncateDiv = element.closest('.truncate-by-height');
+    if (truncateDiv) {
+      truncateDiv.style.maxHeight = 'none';
+      truncateDiv.style.overflow = 'visible';
+    }
+
     // Make cell content scrollable instead of clipped by line-clamp
     var contentDiv = element.closest('.euiDataGridRowCell__content');
     if (contentDiv) {
@@ -366,16 +376,6 @@
       contentDiv.style.display = 'block';
       contentDiv.style.overflowY = 'auto';
       contentDiv.style.overflowX = 'hidden';
-    }
-
-    // Constrain wrap to cell width so horizontal scroll works within the cell
-    var cell = element.closest('[role="gridcell"], td');
-    if (cell) {
-      var cellWidth = cell.clientWidth;
-      if (cellWidth > 0) {
-        wrap.style.width = cellWidth + 'px';
-        wrap.style.maxWidth = cellWidth + 'px';
-      }
     }
   }
 
@@ -461,6 +461,8 @@
   function findAndBeautify() {
     if (!config.enabled || !matchesUrl()) return;
     if (config.fieldNames.length === 0) return;
+
+    fixExpandedRowColspan();
 
     // Feature 2: "all" keyword → auto-detect all JSON cells
     var autoDetectAll = config.fieldNames.some(function (name) {
@@ -613,6 +615,23 @@
     debounceTimer = setTimeout(findAndBeautify, 100);
   }
 
+  // Fix colspan mismatch when Kibana expands a document row.
+  function fixExpandedRowColspan() {
+    var table = document.querySelector('table.kbn-table');
+    if (!table) return;
+    var thead = table.querySelector('thead');
+    if (!thead) return;
+    var headerRow = thead.querySelector('tr');
+    if (!headerRow) return;
+    var headerCols = headerRow.children.length;
+    if (headerCols === 0) return;
+    table.querySelectorAll(':scope > tbody > tr > td[colspan]').forEach(function (td) {
+      if (parseInt(td.getAttribute('colspan'), 10) > headerCols) {
+        td.setAttribute('colspan', String(headerCols));
+      }
+    });
+  }
+
   function init() {
     loadConfig().then(function () {
       if (!config.enabled || !matchesUrl()) return;
@@ -620,6 +639,7 @@
       findAndBeautify();
 
       const observer = new MutationObserver(function () {
+        fixExpandedRowColspan();
         debouncedFindAndBeautify();
       });
 

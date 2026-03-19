@@ -26,8 +26,8 @@ table.kbn-table td[data-kibana-beautified] {
   font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
   font-size: 12px;
   line-height: 1.5;
-  white-space: pre;
-  overflow-x: auto;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
   overflow-y: auto;
   max-height: 400px;
   width: 100%;
@@ -42,6 +42,7 @@ table.kbn-table td[data-kibana-beautified] {
 
 .kibana-beautified-json .json-string {
   color: #16a34a;
+  overflow-wrap: break-word;
 }
 
 .kibana-beautified-json .json-number {
@@ -69,8 +70,7 @@ table.kbn-table td[data-kibana-beautified] {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 .kibana-beautified-json-wrap:hover {
@@ -80,8 +80,8 @@ table.kbn-table td[data-kibana-beautified] {
 
 /* Collapsible JSON tree */
 .json-tree-root {
-  display: inline-block;
-  min-width: 100%;
+  display: block;
+  width: 100%;
 }
 
 .json-entry {
@@ -90,7 +90,8 @@ table.kbn-table td[data-kibana-beautified] {
 
 .json-line {
   display: block;
-  white-space: pre;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
 }
 
 .json-toggle {
