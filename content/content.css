@@ -1,3 +1,27 @@
+/* Increase row top padding in Kibana Discover data grid */
+.euiDataGridRowCell__content {
+  padding: 12px 4px 0px 4px !important;
+}
+
+/* Hide scrollbar in data grid while keeping scroll functionality */
+.euiDataGrid__virtualized,
+.euiDataGridRowCell__content,
+.euiDataGridRowCell__popover,
+.euiDataGrid__virtualized *,
+.euiDataGridRowCell__content *,
+.euiDataGridRowCell__popover * {
+  scrollbar-width: none !important;
+}
+
+.euiDataGrid__virtualized::-webkit-scrollbar,
+.euiDataGridRowCell__content::-webkit-scrollbar,
+.euiDataGridRowCell__popover::-webkit-scrollbar,
+.euiDataGrid__virtualized *::-webkit-scrollbar,
+.euiDataGridRowCell__content *::-webkit-scrollbar,
+.euiDataGridRowCell__popover *::-webkit-scrollbar {
+  display: none !important;
+}
+
 /* Table width fix for Kibana Discover classic table */
 table.kbn-table {
   table-layout: fixed !important;
@@ -29,11 +53,17 @@ table.kbn-table td[data-kibana-beautified] {
   white-space: pre-wrap !important;
   overflow-wrap: break-word !important;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   max-height: 400px;
   width: 100%;
   box-sizing: border-box;
   padding: 4px 0;
   position: relative;
+}
+
+.kibana-beautified-json::-webkit-scrollbar {
+  display: none;
 }
 
 .kibana-beautified-json .json-key {

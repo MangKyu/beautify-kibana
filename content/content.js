@@ -656,7 +656,6 @@
       if (changes.fieldNames) config.fieldNames = changes.fieldNames.newValue;
       if (changes.repairTruncatedJson)
         config.repairTruncatedJson = changes.repairTruncatedJson.newValue;
-
       // Re-process: remove existing beautification and re-apply
       document.querySelectorAll('[data-kibana-beautified]').forEach(function (el) {
         el.removeAttribute('data-kibana-beautified');
