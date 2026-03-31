@@ -369,13 +369,14 @@
       truncateDiv.style.overflow = 'visible';
     }
 
-    // Make cell content scrollable instead of clipped by line-clamp
+    // Override line-clamp; clip content in grid cells (popover has its own scroll)
     var contentDiv = element.closest('.euiDataGridRowCell__content');
     if (contentDiv) {
       contentDiv.style.webkitLineClamp = 'unset';
       contentDiv.style.display = 'block';
       contentDiv.style.overflowY = 'auto';
       contentDiv.style.overflowX = 'hidden';
+      contentDiv.style.setProperty('padding', '4px 4px 0px 4px', 'important');
     }
   }
 
